@@ -1,0 +1,20 @@
+name: Diagnose Webtop login page
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch mobile login page
+        run: |
+          UA='Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36'
+          curl -sSL -A "$UA" -D headers.txt -o page.html -w 'final_url=%{url_effective} status=%{http_code}\n' https://www.webtop.co.il/mobilev2/
+          echo '--- headers ---'; grep -iv '^set-cookie' headers.txt
+          echo '--- size ---'; wc -c page.html
+          echo '--- inputs / forms / scripts ---'
+          grep -oiE '<(input|form|script)[^>]*>' page.html | head -60
+          echo '--- security / token / captcha mentions ---'
+          grep -oiE '.{0,80}(security|token|captcha|platform|login).{0,80}' page.html | head -40
+          echo '--- head of page ---'; head -c 3000 page.html
