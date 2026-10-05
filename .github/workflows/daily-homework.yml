@@ -1,0 +1,37 @@
+name: Daily homework summary
+
+on:
+  schedule:
+    # Sunday-Friday. GitHub cron is UTC: 12:30 UTC = 15:30 Israel summer, 13:30 UTC = 15:30 Israel winter.
+    # The script skips whichever slot isn't 15:30 in Israel.
+    - cron: '30 12 * * 0-5'
+    - cron: '30 13 * * 0-5'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only print the message, do not send to WhatsApp'
+        type: boolean
+        default: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: node index.js
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MASHOV_SCHOOL_ID: ${{ secrets.MASHOV_SCHOOL_ID }}
+          MASHOV_USERNAME: ${{ secrets.MASHOV_USERNAME }}
+          MASHOV_PASSWORD: ${{ secrets.MASHOV_PASSWORD }}
+          WEBTOP_USERNAME: ${{ secrets.WEBTOP_USERNAME }}
+          WEBTOP_PASSWORD: ${{ secrets.WEBTOP_PASSWORD }}
+          WHATSAPP_PHONE: ${{ secrets.WHATSAPP_PHONE }}
+          CALLMEBOT_API_KEY: ${{ secrets.CALLMEBOT_API_KEY }}
